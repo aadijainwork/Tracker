@@ -63,7 +63,7 @@ router.post('/', async (req, res) => {
 // PUT /api/tasks/:id
 router.put('/:id', async (req, res) => {
   try {
-    const { title, description, status, priority, dueDate, projectId } = req.body
+    const { title, description, status, priority, dueDate, projectId, assigneeId } = req.body
     const task = await prisma.task.update({
       where: { id: req.params.id },
       data: {
