@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api/index.js'
-import { fmtDate } from '../utils.js'
+import { fmtDate, statusBadge } from '../utils.js'
 
 export default function Dashboard() {
   const [data, setData] = useState(null)
@@ -23,50 +23,58 @@ export default function Dashboard() {
     <>
       <div className="page-header">
         <div>
-          <h2>dashboard</h2>
-          <p>{today.toLowerCase()}</p>
+          <div className="page-title">Dashboard</div>
+          <div className="page-sub">{today.toLowerCase()}</div>
         </div>
         <Link to="/tasks" className="btn btn-primary btn-sm">+ new task</Link>
       </div>
-      <hr className="page-divider" />
 
       <div className="page-body">
-        <div className="stats-row" style={{ marginBottom: 28 }}>
-          <div className="stat-cell warn">
-            <div className="stat-label">open</div>
-            <div className="stat-num">{s?.openTasks ?? 0}</div>
+
+        {/* Stat Cards */}
+        <div className="stats-grid">
+          <div className="stat-card amber">
+            <div className="stat-card-accent" />
+            <div className="stat-label">Open</div>
+            <div className="stat-value">{s?.openTasks ?? 0}</div>
           </div>
-          <div className="stat-cell">
-            <div className="stat-label">in progress</div>
-            <div className="stat-num">{s?.inProgressTasks ?? 0}</div>
+          <div className="stat-card">
+            <div className="stat-card-accent" />
+            <div className="stat-label">In Progress</div>
+            <div className="stat-value">{s?.inProgressTasks ?? 0}</div>
           </div>
-          <div className="stat-cell bad">
-            <div className="stat-label">blocked</div>
-            <div className="stat-num">{s?.blockedTasks ?? 0}</div>
+          <div className="stat-card red">
+            <div className="stat-card-accent" />
+            <div className="stat-label">Blocked</div>
+            <div className="stat-value">{s?.blockedTasks ?? 0}</div>
           </div>
-          <div className="stat-cell good">
-            <div className="stat-label">overdue</div>
-            <div className="stat-num">{s?.overdueTasks ?? 0}</div>
+          <div className="stat-card red">
+            <div className="stat-card-accent" />
+            <div className="stat-label">Overdue</div>
+            <div className="stat-value">{s?.overdueTasks ?? 0}</div>
           </div>
         </div>
 
-        <div className="two-col">
+        {/* Projects + Meetings */}
+        <div className="two-col" style={{ marginBottom: 20 }}>
           <div>
-            <div className="section-head">
-              <span className="section-label">active projects</span>
+            <div className="section-header">
+              <span className="section-title">Active Projects</span>
               <Link to="/projects" className="btn btn-ghost btn-sm">all →</Link>
             </div>
             {!activeProjects?.length ? (
-              <p className="mono muted" style={{ fontSize: 11 }}>no active projects.</p>
+              <div className="panel">
+                <div className="panel-row"><span className="muted" style={{ fontSize: 13 }}>No active projects.</span></div>
+              </div>
             ) : (
-              <div className="row-list">
+              <div className="panel">
                 {activeProjects.map((p) => (
-                  <Link key={p.id} to={`/projects/${p.id}`} className="row-item">
+                  <Link key={p.id} to={`/projects/${p.id}`} className="panel-row">
                     <div>
-                      <div className="row-title">{p.name}</div>
-                      <div className="row-sub">{p._count?.tasks ?? 0} tasks</div>
+                      <div className="panel-row-title">{p.name}</div>
+                      <div className="panel-row-sub">{p._count?.tasks ?? 0} tasks</div>
                     </div>
-                    <span className="row-meta">active</span>
+                    <span className="badge badge-green">active</span>
                   </Link>
                 ))}
               </div>
@@ -74,19 +82,21 @@ export default function Dashboard() {
           </div>
 
           <div>
-            <div className="section-head">
-              <span className="section-label">recent meetings</span>
+            <div className="section-header">
+              <span className="section-title">Recent Meetings</span>
               <Link to="/meetings" className="btn btn-ghost btn-sm">all →</Link>
             </div>
             {!recentMeetings?.length ? (
-              <p className="mono muted" style={{ fontSize: 11 }}>no meetings yet.</p>
+              <div className="panel">
+                <div className="panel-row"><span className="muted" style={{ fontSize: 13 }}>No meetings yet.</span></div>
+              </div>
             ) : (
-              <div className="row-list">
+              <div className="panel">
                 {recentMeetings.map((m) => (
-                  <Link key={m.id} to="/meetings" className="row-item">
+                  <Link key={m.id} to="/meetings" className="panel-row">
                     <div>
-                      <div className="row-title">{m.title}</div>
-                      <div className="row-sub">{fmtDate(m.meetingDate)}</div>
+                      <div className="panel-row-title">{m.title}</div>
+                      <div className="panel-row-sub">{fmtDate(m.meetingDate)}</div>
                     </div>
                   </Link>
                 ))}
@@ -94,45 +104,35 @@ export default function Dashboard() {
             )}
           </div>
         </div>
-          <div style={{ marginTop: 30 }}>
-          <div className="section-head">
-            <span className="section-label">
-              team tasks
-            </span>
+
+        {/* Team Tasks */}
+        <div className="section-header">
+          <span className="section-title">Team Tasks</span>
+          <Link to="/tasks" className="btn btn-ghost btn-sm">all →</Link>
+        </div>
+        {!teamTasks?.length ? (
+          <div className="panel">
+            <div className="panel-row"><span className="muted" style={{ fontSize: 13 }}>No tasks yet.</span></div>
           </div>
-
-          {!teamTasks?.length ? (
-            <p className="mono muted">
-              no tasks.
-            </p>
-          ) : (
-            <div className="row-list">
-              {teamTasks.map((t) => (
-                <div
-                  key={t.id}
-                  className="row-item"
-                >
+        ) : (
+          <div className="panel">
+            {teamTasks.map((t) => {
+              const [cls, label] = statusBadge(t.status)
+              return (
+                <div key={t.id} className="panel-row">
                   <div>
-                    <div className="row-title">
-                      {t.title}
-                    </div>
-
-                    <div className="row-sub">
-                      {t.assignee?.name || "Unassigned"}
-                      {t.project
-                        ? ` • ${t.project.name}`
-                        : ""}
+                    <div className="panel-row-title">{t.title}</div>
+                    <div className="panel-row-sub">
+                      {t.assignee?.name || 'Unassigned'}{t.project ? ` · ${t.project.name}` : ''}
                     </div>
                   </div>
-
-                  <span className="row-meta">
-                    {t.status}
-                  </span>
+                  <span className={`badge ${cls}`}>{label}</span>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+              )
+            })}
+          </div>
+        )}
+
       </div>
     </>
   )
